@@ -6,8 +6,162 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
+#include <map>
 
 using namespace std;
+
+namespace task18
+{
+
+const string DIRNAME = "C:\\Users\\Byter\\Desktop\\CPPLang\\src\\";
+struct FIELD
+{
+	vector<vector<int>> list;
+	int max = 0, min = 0;
+	vector<int> arr;
+
+	void func(int x, int y, int sum)
+	{
+		if(list[y][x] < 500 && list[y][x] > 100) return;
+
+		if(x == 11 && y == 11)
+		{
+			sum += list[y][x];
+			arr.push_back(sum);
+		}
+		else
+		{
+			if(x < 11 && y < 11)
+			{
+				func(x + 1, y, sum + list[y][x]);
+				func(x, y + 1, sum + list[y][x]);
+
+			}
+			else if(x < 11)func(x + 1, y, sum + list[y][x]);
+			else if(y < 11)func(x, y + 1, sum + list[y][x]);
+		}
+		
+	}
+
+	FIELD(vector<vector<int>> list)
+	{
+		this->list = list;
+		func(0,0,0);
+
+		this->max = *max_element(arr.begin(), arr.end());
+		this->min = *min_element(arr.begin(), arr.end());
+	}
+
+};
+
+//____________ПЕРЕДВИЖЕНИЕ НА ЛЮБОЕ КОЛ-ВО КЛЕТОК____________________
+
+//координаты стен : описывается как координаты клеток перед стенкой и после
+typedef pair<pair<int, int>, pair<int, int>> Data;
+vector<Data> walls = {
+	make_pair(make_pair(6,4),make_pair(6,5)),
+	make_pair(make_pair(7,4),make_pair(7,5)),
+	make_pair(make_pair(8,4),make_pair(8,5)),
+	make_pair(make_pair(9,4),make_pair(9,5)),
+	make_pair(make_pair(10,4),make_pair(10,5)),
+	make_pair(make_pair(11,4),make_pair(11,5)),
+	make_pair(make_pair(12,4),make_pair(12,5)),
+
+	make_pair(make_pair(12,5),make_pair(13,5)),
+	make_pair(make_pair(12,6),make_pair(13,6)),
+	make_pair(make_pair(12,7),make_pair(13,7)),
+	make_pair(make_pair(12,8),make_pair(13,8)),
+	make_pair(make_pair(12,9),make_pair(13,9)),
+	make_pair(make_pair(12,10),make_pair(13,10)),
+	make_pair(make_pair(12,11),make_pair(13,11)),
+
+	
+};
+
+const int FIELDSIZE = 16;
+struct FIELD_LOOP
+{
+	vector<vector<int>> list;
+	vector<int> arr;
+	map<pair<int,int>, pair<int,int>> picked;
+	int max, min;
+
+	pair<int,int> func(int x, int y, pair<int,int> past)
+	{
+		if(x == 0 && y == 0) return make_pair(list[y][x], list[y][x]);
+
+		for(Data i : walls)
+		{
+			if((i.second == past && i.first == make_pair(x,y))||
+				(i.first == past && i.second == make_pair(x,y)))
+				return make_pair(0,0);
+		}
+
+		if(picked.find(make_pair(x,y)) != picked.end())
+		{
+			return picked.find(make_pair(x,y))->second;
+		}
+		else
+		{
+			vector<int> sums;
+			pair<int,int> F;
+			for(int _x = 0; _x < x; _x++)
+			{
+				F = func(_x,y, make_pair(x,y));
+				if(F != pair<int,int>(0,0))
+				{
+					sums.push_back(F.first);
+					sums.push_back(F.second);
+				}
+			}
+			for(int _y = 0; _y < y; _y++)
+			{
+				F = func(x,_y, make_pair(x,y));
+				if(F != pair<int,int>(0,0))
+				{
+					sums.push_back(F.first);
+					sums.push_back(F.second);
+				}
+			}
+
+			pair<int,int> result = make_pair(
+				*max_element(sums.begin(), sums.end()) + list[y][x],
+				*min_element(sums.begin(), sums.end()) + list[y][x]);
+			picked.insert(make_pair(make_pair(x,y), result));
+
+			return result;
+		}
+	}
+
+	FIELD_LOOP(vector<vector<int>> list)
+	{
+		this->list = list;
+		pair<int,int> result = func(FIELDSIZE - 1, FIELDSIZE - 1, make_pair(0,0));
+		max = result.first;
+		min = result.second;
+	}
+};
+
+void run()
+{
+    ifstream file(DIRNAME + "file.txt");
+	vector<vector<int>> arr;
+
+	for(int y = 0; y < 12; y++)
+	{
+		arr.push_back(vector<int>{});
+		for(int x = 0; x < 12; x++)
+		{
+			int buffer;
+			file >> buffer;
+			arr[y].push_back(buffer);
+		}
+	}
+
+	FIELD F = FIELD(arr);
+	cout << F.max << " " << F.min << endl;
+}
+}
 
 namespace task21
 {
@@ -265,6 +419,88 @@ namespace task26
 
 namespace task27
 {
+
+	typedef vector<pair<int, int>> Data;
+
+	Data getData(string filename) 
+	{
+		ifstream file(filename);
+		Data arr;
+
+		int items;
+		file >> items;
+
+		for (int i = 0; i < items; i++) 
+		{
+			pair<int, int> buffer;
+			file >> buffer.first >> buffer.second;
+			arr.push_back(buffer);
+		}
+
+		return arr;
+	}
+
+	struct AllSums
+	{
+	public: vector<int> sums;
+	private:
+		vector<int> nums;
+		void get_all_sums(int index, int sum)
+		{
+			sum += nums[index];
+			sums.push_back(sum);
+
+			for (int i = index + 1; i < nums.size(); i++)
+				get_all_sums(i, sum);
+		}
+	public:
+		AllSums(vector<int> nums)
+		{
+			this->nums = nums;
+			get_all_sums(0, 0);
+		}
+	};
+
+	int getResult(Data list) 
+	{
+		vector<int> arr, delta;
+		int sum = 0;
+
+		for (Data::iterator i = list.begin(); i != list.end(); i++)
+		{
+			arr.push_back(max(i->first, i->second));
+			if (abs(i->first - i->second))delta.push_back(abs(i->first - i->second));
+			sum += max(i->first, i->second);
+		}
+
+		if (sum % 5 == 0) return sum;
+		sort(delta.begin(), delta.end());
+
+		for (int interval = 1; interval < arr.size(); interval++) 
+		{
+			vector<int> buffer = delta;
+			buffer.erase(buffer.begin() + interval, buffer.end());
+
+			vector<int> allsums = AllSums(buffer).sums;
+			sort(allsums.begin(), allsums.end());
+
+			for (int i = 0; i < allsums.size(); i++)
+			{
+				if ((sum - allsums[i]) % 5 == 0) return (sum - allsums[i]);
+			}
+		}
+		
+		return 0;
+	}
+
+	void Run()
+	{
+		cout << getResult(getData("data/27/27-4a.txt")) << endl;
+		cout << getResult(getData("data/27/27-4b.txt")) << endl;
+	}
+
+	//________________________________________________________
+
 	typedef vector<tuple<int, int>> array_of_tuple;
 
 	void GetTextFromFile(array_of_tuple* arr, int* n, string filename)
