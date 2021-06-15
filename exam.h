@@ -10,6 +10,36 @@
 
 using namespace std;
 
+string to_system(int x, int y)
+{
+    int n = x;
+    string str;
+
+    while(n >= y)
+    {
+        str += to_string(n % y);
+        n /= y;
+    }
+    str += to_string(n);
+    reverse(str.begin(),str.end());
+    
+    return str;
+}
+
+int from_system(string x, int F)
+{
+    int num;
+    reverse(x.begin(), x.end());
+    
+    for(int i = 0; i < x.length(); i++)
+    {
+        int s = ((int)x[i] - 48);
+        num += (pow(F, i) * s);
+    }
+
+    return num;
+}
+
 namespace task18
 {
 
