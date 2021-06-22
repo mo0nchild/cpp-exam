@@ -10,6 +10,43 @@
 
 using namespace std;
 
+struct Data 
+{
+    vector<int> sums, arr;
+    map<int, vector<int>> memory;
+
+    vector<int> func(int index)
+    {
+        if (memory.find(index) != memory.end()) return memory[index];
+        else 
+        {
+            vector<int> res;
+            for (int i = index + 1; i < arr.size(); i++)
+            {
+                vector<int> buffer = func(i);
+                for (int k = 0; k < buffer.size(); k++) buffer[k] += arr[index];
+
+                res.push_back(arr[index] + arr[i]);
+                res.insert(res.end(), buffer.begin(), buffer.end());
+            }
+            memory.insert(make_pair(index, res));
+            return res;
+        }
+    }
+
+    Data(vector<int> a)
+    {
+        this->arr = a;
+        sums = a;
+        for (int i = arr.size() - 2; i >= 0; i--) 
+        {
+            vector<int> s = func(i);
+            sums.insert(sums.end(),s.begin(), s.end());
+        }
+        sort(sums.begin(), sums.end());
+    }
+};
+
 string to_system(int x, int y)
 {
     int n = x;
